@@ -30,11 +30,13 @@ type TGIFTalkgroupResponse struct {
 }
 
 type TGIFClient struct {
-	BaseURL    string
-	httpClient *http.Client
-	allData    []TGIFTalkgroup
-	lastUpdate time.Time
-	cacheValid bool // Add this field
+	BaseURL        string
+	httpClient     *http.Client
+	allData        []TGIFTalkgroup
+	lastUpdate     time.Time
+	cacheValid     bool
+	startupRefresh time.Duration // Add this field
+	cacheTime      time.Duration // Add this field
 }
 
 // getCacheFile returns the path to the cache file
@@ -106,14 +108,12 @@ func (tg *TGIFTalkgroup) IsActive() bool {
 	// For now, return true
 	return true // Update based on your logic
 }
-
-// Create new TGIF client with configurable caching
 func NewTGIFClient() *TGIFClient {
 	return &TGIFClient{
-		BaseURL: "https://api.tgif.network/dmr/talkgroups/json",
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		BaseURL:        "https://api.tgif.network/dmr/talkgroups/json",
+		httpClient:     &http.Client{Timeout: 30 * time.Second},
+		startupRefresh: 2 * time.Hour, // Default refresh interval
+		cacheTime:      2 * time.Hour, // Default cache validity
 	}
 }
 
@@ -121,56 +121,31 @@ func NewTGIFClient() *TGIFClient {
 func (c *TGIFClient) fetchAllData() error {
 	fmt.Println("Fetching talkgroup data from TGIF.network...")
 
-	resp, err := c.client.Get(c.BaseURL)
+	resp, err := c.httpClient.Get(c.BaseURL) // Use httpClient instead of c.client
 	if err != nil {
 		return fmt.Errorf("failed to make request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+		return fmt.Errorf("API returned status %d", resp.StatusCode)
 	}
 
-	// Read the response body
-	var body []byte
-	if body, err = io.ReadAll(resp.Body); err != nil {
-		return fmt.Errorf("failed to read response body: %v", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response: %v", err)
 	}
 
-	// Try to decode as array first (most likely format)
-	var newTalkgroups []TGIFTalkgroup
-	if err := json.Unmarshal(body, &newTalkgroups); err == nil {
-		// Check for changes if we have existing data
-		if len(c.allData) > 0 {
-			oldCount := len(c.allData)
-			newCount := len(newTalkgroups)
-
-			if newCount != oldCount {
-				fmt.Printf("Talkgroup count changed: %d → %d (%+d)\n", oldCount, newCount, newCount-oldCount)
-			} else {
-				fmt.Printf("Talkgroup data refreshed: %d talkgroups (no count change)\n", newCount)
-			}
-		} else {
-			fmt.Printf("Successfully loaded %d talkgroups from TGIF.network\n", len(newTalkgroups))
-		}
-
-		c.allData = newTalkgroups
-		c.lastUpdate = time.Now()
-		return nil
-	}
-
-	// If array decode fails, try as response object
 	var response TGIFTalkgroupResponse
-	if err := json.Unmarshal(body, &response); err == nil {
-		c.allData = response.Talkgroups
-		c.lastUpdate = time.Now()
-		fmt.Printf("Successfully loaded %d talkgroups from TGIF.network (wrapped format)\n", len(response.Talkgroups))
-		return nil
+	if err := json.Unmarshal(body, &response); err != nil {
+		return fmt.Errorf("failed to parse JSON: %v", err)
 	}
 
-	// If both fail, show what we got
-	fmt.Printf("Raw response (first 500 chars): %s\n", string(body[:min(500, len(body))]))
-	return fmt.Errorf("failed to decode JSON response")
+	// Just make sure to set cacheValid = true when data is loaded
+	c.allData = response.Talkgroups
+	c.lastUpdate = time.Now()
+	c.cacheValid = true
+	return nil
 }
 
 // Ensure we have fresh data with intelligent refresh logic
