@@ -112,11 +112,8 @@ func main() {
 	} else {
 		fmt.Printf("Found %d results:\n", len(results))
 		for i, r := range results {
-			freq := "Unknown"
-			if r.TxFrequency != nil {
-				freq = fmt.Sprintf("%.4f MHz", *r.TxFrequency)
-			}
-			fmt.Printf("  %d. %s (%s) - %s\n", i+1, r.Callsign, freq, r.Mode)
+			fmt.Printf("  %d. %s (%s) - %s - %s\n",
+				i+1, r.Callsign, r.GetFrequencyString(), r.Mode, r.GetLocationString())
 		}
 	}
 
@@ -128,11 +125,8 @@ func main() {
 	} else {
 		fmt.Printf("Found %d repeaters near 146.52 MHz:\n", len(freqResults))
 		for i, r := range freqResults {
-			freq := "Unknown"
-			if r.TxFrequency != nil {
-				freq = fmt.Sprintf("%.4f MHz", *r.TxFrequency)
-			}
-			fmt.Printf("  %d. %s (%s) - %s\n", i+1, r.Callsign, freq, r.Mode)
+			fmt.Printf("  %d. %s (%s) - %s - %s\n",
+				i+1, r.Callsign, r.GetFrequencyString(), r.Mode, r.GetLocationString())
 		}
 	}
 

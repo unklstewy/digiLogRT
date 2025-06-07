@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +46,46 @@ type BrandmeisterRepeater struct {
 	LastMaster  int     `json:"lastKnownMaster"` // Last known master ID
 	Description string  `json:"description"`     // HTML description
 }
+
+// getCacheFile returns the path to the cache file
+func (c *BrandmeisterClient) getCacheFile() string {
+	// Use a cache directory in the user's cache folder or temp
+	cacheDir := filepath.Join(os.TempDir(), "digiLogRT", "cache")
+	os.MkdirAll(cacheDir, 0755) // Create directory if it doesn't exist
+	return filepath.Join(cacheDir, "brandmeister_repeaters.json")
+}
+
+// CheckCacheAge returns whether cache needs refresh and current age
+func (c *BrandmeisterClient) CheckCacheAge() (bool, time.Duration) {
+	cacheFile := c.getCacheFile()
+
+	// Check if cache file exists
+	info, err := os.Stat(cacheFile)
+	if err != nil {
+		// Cache doesn't exist, needs refresh
+		return true, 0
+	}
+
+	age := time.Since(info.ModTime())
+	maxAge := 24 * time.Hour // Brandmeister cache valid for 24 hours
+
+	return age > maxAge, age
+}
+
+// RefreshCache forces a cache refresh
+func (c *BrandmeisterClient) RefreshCache() error {
+	// Simply delete the cache file, next GetAllRepeaters call will refresh
+	cacheFile := c.getCacheFile()
+	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove cache file: %v", err)
+	}
+
+	// Force a fresh fetch
+	_, err := c.GetAllRepeaters()
+	return err
+}
+
+// ...existing code...
 
 // BrandmeisterResponse represents the API response format
 type BrandmeisterResponse struct {

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +19,44 @@ type TGIFTalkgroup struct {
 	Website     string `json:"website"`
 	Description string `json:"description"`
 	// Add other fields as needed
+}
+
+// getCacheFile returns the path to the cache file
+func (c *TGIFClient) getCacheFile() string {
+	// Use a cache directory in the user's cache folder or temp
+	cacheDir := filepath.Join(os.TempDir(), "digiLogRT", "cache")
+	os.MkdirAll(cacheDir, 0755) // Create directory if it doesn't exist
+	return filepath.Join(cacheDir, "tgif_talkgroups.json")
+}
+
+// CheckCacheAge returns whether cache needs refresh and current age
+func (c *TGIFClient) CheckCacheAge() (bool, time.Duration) {
+	cacheFile := c.getCacheFile()
+
+	// Check if cache file exists
+	info, err := os.Stat(cacheFile)
+	if err != nil {
+		// Cache doesn't exist, needs refresh
+		return true, 0
+	}
+
+	age := time.Since(info.ModTime())
+	maxAge := 2 * time.Hour // TGIF cache valid for 2 hours
+
+	return age > maxAge, age
+}
+
+// RefreshCache forces a cache refresh
+func (c *TGIFClient) RefreshCache() error {
+	// Simply delete the cache file, next GetAllTalkgroups call will refresh
+	cacheFile := c.getCacheFile()
+	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove cache file: %v", err)
+	}
+
+	// Force a fresh fetch
+	_, err := c.GetAllTalkgroups()
+	return err
 }
 
 // Add method to decode description
