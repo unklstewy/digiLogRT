@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/unklstewy/digiLog/internal/api"
-	"github.com/unklstewy/digiLog/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/config"
 )
 
 func main() {

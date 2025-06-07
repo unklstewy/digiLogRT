@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/unklstewy/digiLog/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/api"
 )
 
 func main() {
@@ -35,17 +35,17 @@ func main() {
 		log.Fatalf("Failed to get talkgroups: %v", err)
 	}
 
-	fmt.Printf("Total talkgroups: %d\n", talkgroups.Count)
+	fmt.Printf("Total talkgroups: %d\n", len(talkgroups))
 
 	// Show first 5 talkgroups as examples
 	maxShow := 5
-	if len(talkgroups.Talkgroups) < maxShow {
-		maxShow = len(talkgroups.Talkgroups)
+	if len(talkgroups) < maxShow {
+		maxShow = len(talkgroups)
 	}
 
 	fmt.Printf("\nFirst %d talkgroups:\n", maxShow)
 	for i := 0; i < maxShow; i++ {
-		tg := talkgroups.Talkgroups[i]
+		tg := talkgroups[i]
 		fmt.Printf("\nTalkgroup %d:\n", i+1)
 		fmt.Printf("  ID: %s\n", tg.ID)
 		fmt.Printf("  Name: %s\n", tg.Name)
@@ -83,8 +83,8 @@ func main() {
 
 	// First, let's see what IDs are in the first 10 talkgroups
 	fmt.Println("Sample of available IDs:")
-	for i := 0; i < 10 && i < len(talkgroups.Talkgroups); i++ {
-		fmt.Printf("  TG ID: %s\n", talkgroups.Talkgroups[i].ID)
+	for i := 0; i < 10 && i < len(talkgroups); i++ {
+		fmt.Printf("  TG ID: %s\n", talkgroups[i].ID)
 	}
 
 	// Try looking up a known ID (like "101" from the first talkgroup)
@@ -134,28 +134,28 @@ func main() {
 	}
 	// ...existing code...
 
-	fmt.Printf("Total talkgroups: %d\n", talkgroups.Count)
+	fmt.Printf("Total talkgroups: %d\n", len(talkgroups))
 
 	// Add some dataset statistics
 	fmt.Println("\nDataset Statistics:")
 
 	// Find ID range
-	if len(talkgroups.Talkgroups) > 0 {
-		firstID := talkgroups.Talkgroups[0].ID
-		lastID := talkgroups.Talkgroups[len(talkgroups.Talkgroups)-1].ID
+	if len(talkgroups) > 0 {
+		firstID := talkgroups[0].ID
+		lastID := talkgroups[len(talkgroups)-1].ID
 		fmt.Printf("  ID Range: %s to %s\n", firstID, lastID)
 	}
 
 	// Count talkgroups with descriptions
 	describedCount := 0
-	for _, tg := range talkgroups.Talkgroups {
+	for _, tg := range talkgroups {
 		if tg.Description != "" {
 			describedCount++
 		}
 	}
 	fmt.Printf("  Talkgroups with descriptions: %d/%d (%.1f%%)\n",
-		describedCount, len(talkgroups.Talkgroups),
-		float64(describedCount)/float64(len(talkgroups.Talkgroups))*100)
+		describedCount, len(talkgroups),
+		float64(describedCount)/float64(len(talkgroups))*100)
 
 	// Test manual refresh capability
 	fmt.Println("\nTesting manual refresh capability...")

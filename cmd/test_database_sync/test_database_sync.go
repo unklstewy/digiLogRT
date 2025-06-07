@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unklstewy/digiLog/internal/api"
-	"github.com/unklstewy/digiLog/internal/config"
-	"github.com/unklstewy/digiLog/internal/database"
+	"github.com/unklstewy/digiLogRT/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/database"
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 			if err != nil {
 				log.Printf("Failed to get Brandmeister repeaters: %v", err)
 			} else {
-				if err := db.SyncBrandmeisterData(response.Repeaters); err != nil {
+				if err := db.SyncBrandmeisterData(response); err != nil {
 					log.Printf("Failed to sync Brandmeister data: %v", err)
 				}
 			}
@@ -59,7 +59,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to get TGIF talkgroups: %v", err)
 		} else {
-			if err := db.SyncTGIFData(talkgroups.Talkgroups); err != nil {
+			if err := db.SyncTGIFData(talkgroups); err != nil {
 				log.Printf("Failed to sync TGIF data: %v", err)
 			}
 		}
@@ -75,7 +75,7 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to get hearham repeaters: %v", err)
 		} else {
-			if err := db.SyncHearhamData(repeaters.Repeaters); err != nil {
+			if err := db.SyncHearhamData(repeaters); err != nil {
 				log.Printf("Failed to sync hearham data: %v", err)
 			}
 		}

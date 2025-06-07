@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/unklstewy/digiLog/internal/api"
-	"github.com/unklstewy/digiLog/internal/database"
+	"github.com/unklstewy/digiLogRT/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/database"
 )
 
 func main() {

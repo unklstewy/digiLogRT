@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unklstewy/digiLog/internal/api"
-	"github.com/unklstewy/digiLog/internal/config"
-	"github.com/unklstewy/digiLog/internal/database"
+	"github.com/unklstewy/digiLogRT/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/database"
 )
 
 // TimingResult tracks detailed timing information for each sync operation
@@ -161,14 +161,14 @@ func syncBrandmeisterWithPool(db *database.Database, client *api.BrandmeisterCli
 		return result
 	}
 	result.FetchTime = time.Since(fetchStart)
-	result.RecordCount = len(response.Repeaters)
+	result.RecordCount = len(response)
 
 	fmt.Printf("⏱️  Data fetch: %v (%d records)\n", result.FetchTime, result.RecordCount)
 
 	// Process data
 	processStart := time.Now()
 	// Use the repeaters as returned by the API client
-	if err := db.SyncBrandmeisterData(response.Repeaters); err != nil {
+	if err := db.SyncBrandmeisterData(response); err != nil {
 		log.Printf("Failed to sync Brandmeister data: %v", err)
 		return result
 	}
@@ -202,13 +202,13 @@ func syncTGIFWithPool(db *database.Database, client *api.TGIFClient, verbose boo
 		return result
 	}
 	result.FetchTime = time.Since(fetchStart)
-	result.RecordCount = len(response.Talkgroups)
+	result.RecordCount = len(response)
 
 	fmt.Printf("⏱️  Data fetch: %v (%d records)\n", result.FetchTime, result.RecordCount)
 
 	// Process data
 	processStart := time.Now()
-	if err := db.SyncTGIFData(response.Talkgroups); err != nil {
+	if err := db.SyncTGIFData(response); err != nil {
 		log.Printf("Failed to sync TGIF data: %v", err)
 		return result
 	}
@@ -242,13 +242,13 @@ func syncHearhamWithPool(db *database.Database, client *api.HearhamClient, verbo
 		return result
 	}
 	result.FetchTime = time.Since(fetchStart)
-	result.RecordCount = len(response.Repeaters)
+	result.RecordCount = len(response)
 
 	fmt.Printf("⏱️  Data fetch: %v (%d records)\n", result.FetchTime, result.RecordCount)
 
 	// Process data
 	processStart := time.Now()
-	if err := db.SyncHearhamData(response.Repeaters); err != nil {
+	if err := db.SyncHearhamData(response); err != nil {
 		log.Printf("Failed to sync hearham data: %v", err)
 		return result
 	}

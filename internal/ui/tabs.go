@@ -4,7 +4,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 
-	"github.com/unklstewy/digiLog/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/config"
 )
 
 type MainTabs struct {

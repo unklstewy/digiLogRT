@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/unklstewy/digiLog/internal/api"
-	"github.com/unklstewy/digiLog/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/config"
 )
 
 func main() {
@@ -47,17 +47,17 @@ func main() {
 		log.Fatalf("Failed to get repeaters: %v", err)
 	}
 
-	fmt.Printf("Total repeaters: %d\n", repeaters.Count)
+	fmt.Printf("Total repeaters: %d\n", len(repeaters))
 
 	// Show first 3 repeaters as examples
 	maxShow := 3
-	if len(repeaters.Repeaters) < maxShow {
-		maxShow = len(repeaters.Repeaters)
+	if len(repeaters) < maxShow {
+		maxShow = len(repeaters)
 	}
 
 	fmt.Printf("\nFirst %d repeaters:\n", maxShow)
 	for i := 0; i < maxShow; i++ {
-		r := repeaters.Repeaters[i]
+		r := repeaters[i]
 		fmt.Printf("\nRepeater %d:\n", i+1)
 		fmt.Printf("  ID: %d\n", r.ID)
 		fmt.Printf("  Callsign: %s\n", r.Callsign)
@@ -97,13 +97,13 @@ func main() {
 
 	// Show sample of available IDs
 	fmt.Println("Sample of available repeater IDs:")
-	for i := 0; i < 5 && i < len(repeaters.Repeaters); i++ {
-		fmt.Printf("  Repeater ID: %d (%s)\n", repeaters.Repeaters[i].ID, repeaters.Repeaters[i].Callsign)
+	for i := 0; i < 5 && i < len(repeaters); i++ {
+		fmt.Printf("  Repeater ID: %d (%s)\n", repeaters[i].ID, repeaters[i].Callsign)
 	}
 
 	// Try looking up the first repeater
-	if len(repeaters.Repeaters) > 0 {
-		firstID := repeaters.Repeaters[0].ID
+	if len(repeaters) > 0 {
+		firstID := repeaters[0].ID
 		fmt.Printf("\nTesting lookup of Repeater ID %d...\n", firstID)
 		rep, err := client.GetRepeater(firstID)
 		if err != nil {
@@ -128,14 +128,14 @@ func main() {
 
 	// Count online vs offline repeaters
 	onlineCount := 0
-	for _, r := range repeaters.Repeaters {
+	for _, r := range repeaters {
 		if r.IsOnline() {
 			onlineCount++
 		}
 	}
 	fmt.Printf("  Online repeaters: %d/%d (%.1f%%)\n",
-		onlineCount, len(repeaters.Repeaters),
-		float64(onlineCount)/float64(len(repeaters.Repeaters))*100)
+		onlineCount, len(repeaters),
+		float64(onlineCount)/float64(len(repeaters))*100)
 
 	// Test manual refresh capability
 	fmt.Println("\nTesting manual refresh capability...")

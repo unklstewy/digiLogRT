@@ -83,8 +83,6 @@ func (c *HearhamClient) RefreshCache() error {
 	return err
 }
 
-// ...existing code...
-
 // Helper methods for hearham data
 func (h *HearhamRepeater) GetFrequencyMHz() float64 {
 	return float64(h.Frequency) / 1000000.0

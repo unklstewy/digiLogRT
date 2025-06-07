@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unklstewy/digiLog/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/api" // Fixed module path
 )
 
 // ...existing code...

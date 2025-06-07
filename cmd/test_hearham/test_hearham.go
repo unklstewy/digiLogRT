@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/unklstewy/digiLog/internal/api"
+	"github.com/unklstewy/digiLogRT/internal/api"
 )
 
 func main() {

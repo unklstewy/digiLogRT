@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/unklstewy/digiLog/internal/database"
+	"github.com/unklstewy/digiLogRT/internal/database"
 )
 
 func main() {

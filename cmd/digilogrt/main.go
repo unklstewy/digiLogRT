@@ -7,8 +7,8 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/theme"
 
-	"github.com/unklstewy/digiLog/internal/config"
-	"github.com/unklstewy/digiLog/internal/ui"
+	"github.com/unklstewy/digiLogRT/internal/config"
+	"github.com/unklstewy/digiLogRT/internal/ui"
 )
 
 func main() {
