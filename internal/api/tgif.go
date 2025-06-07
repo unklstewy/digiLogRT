@@ -121,7 +121,7 @@ func NewTGIFClient() *TGIFClient {
 func (c *TGIFClient) fetchAllData() error {
 	fmt.Println("Fetching talkgroup data from TGIF.network...")
 
-	resp, err := c.httpClient.Get(c.BaseURL) // Use httpClient instead of c.client
+	resp, err := c.httpClient.Get(c.BaseURL)
 	if err != nil {
 		return fmt.Errorf("failed to make request: %v", err)
 	}
@@ -136,16 +136,34 @@ func (c *TGIFClient) fetchAllData() error {
 		return fmt.Errorf("failed to read response: %v", err)
 	}
 
-	var response TGIFTalkgroupResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return fmt.Errorf("failed to parse JSON: %v", err)
+	// Try to decode as array first (TGIF returns direct array)
+	var talkgroups []TGIFTalkgroup
+	if err := json.Unmarshal(body, &talkgroups); err == nil {
+		// Success with array format
+		c.allData = talkgroups
+		c.lastUpdate = time.Now()
+		c.cacheValid = true
+		fmt.Printf("Successfully loaded %d talkgroups from TGIF.network (array format)\n", len(talkgroups))
+		return nil
 	}
 
-	// Just make sure to set cacheValid = true when data is loaded
-	c.allData = response.Talkgroups
-	c.lastUpdate = time.Now()
-	c.cacheValid = true
-	return nil
+	// If array decode fails, try as wrapped response object
+	var response TGIFTalkgroupResponse
+	if err := json.Unmarshal(body, &response); err == nil {
+		c.allData = response.Talkgroups
+		c.lastUpdate = time.Now()
+		c.cacheValid = true
+		fmt.Printf("Successfully loaded %d talkgroups from TGIF.network (wrapped format)\n", len(response.Talkgroups))
+		return nil
+	}
+
+	// If both fail, show what we got for debugging
+	if len(body) > 500 {
+		fmt.Printf("Raw response (first 500 chars): %s\n", string(body[:500]))
+	} else {
+		fmt.Printf("Raw response: %s\n", string(body))
+	}
+	return fmt.Errorf("failed to decode JSON response as either array or wrapped object")
 }
 
 // Ensure we have fresh data with intelligent refresh logic
@@ -261,13 +279,13 @@ func (c *TGIFClient) GetAllTalkgroups() ([]TGIFTalkgroup, error) {
 	}
 
 	// If file cache miss, fetch from API
-	if err := c.refreshData(); err != nil {
+	if err := c.fetchAllData(); err != nil {
 		return nil, err
 	}
 
 	// Save to file cache
 	if err := c.saveToCache(c.allData); err != nil {
-		log.Printf("Warning: Failed to save cache to file: %v", err)
+		log.Printf("Warning: Failed to save TGIF cache to file: %v", err)
 	}
 
 	return c.allData, nil
