@@ -27,7 +27,6 @@ func GetGlobalPool() *ClientPool {
 }
 
 // ...existing code...
-
 // WarmCaches proactively refreshes caches if they're older than maxAge
 func (p *ClientPool) WarmCaches(brandmeisterKey string, maxAge time.Duration) error {
 	fmt.Printf("🔥 Checking cache freshness (max age: %v)\n", maxAge)

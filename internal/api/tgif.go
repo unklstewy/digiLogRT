@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -279,17 +280,72 @@ func (c *TGIFClient) SearchTalkgroups(query string) (*TGIFTalkgroupResponse, err
 	}, nil
 }
 
-// Get all talkgroups
-func (c *TGIFClient) GetAllTalkgroups() (*TGIFTalkgroupResponse, error) {
-	if err := c.ensureData(); err != nil {
+// GetAllTalkgroups returns all cached talkgroup data with file caching
+func (c *TGIFClient) GetAllTalkgroups() ([]TGIFTalkgroup, error) {
+	// Try to load from file cache first
+	if data, err := c.loadFromCache(); err == nil {
+		c.allData = data
+		c.cacheValid = true
+		return data, nil
+	}
+
+	// If file cache miss, fetch from API
+	if err := c.refreshData(); err != nil {
 		return nil, err
 	}
 
-	return &TGIFTalkgroupResponse{
-		Status:     "success",
-		Count:      len(c.allData),
-		Talkgroups: c.allData,
-	}, nil
+	// Save to file cache
+	if err := c.saveToCache(c.allData); err != nil {
+		log.Printf("Warning: Failed to save cache to file: %v", err)
+	}
+
+	return c.allData, nil
+}
+
+// loadFromCache loads data from file cache
+func (c *TGIFClient) loadFromCache() ([]TGIFTalkgroup, error) {
+	cacheFile := c.getCacheFile()
+
+	// Check if file exists and is fresh enough
+	info, err := os.Stat(cacheFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check cache age
+	age := time.Since(info.ModTime())
+	if age > 2*time.Hour {
+		return nil, fmt.Errorf("cache too old: %v", age)
+	}
+
+	// Read and parse cache file
+	data, err := os.ReadFile(cacheFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var talkgroups []TGIFTalkgroup
+	err = json.Unmarshal(data, &talkgroups)
+	return talkgroups, err
+}
+
+// saveToCache saves data to file cache
+func (c *TGIFClient) saveToCache(data []TGIFTalkgroup) error {
+	cacheFile := c.getCacheFile()
+
+	// Ensure cache directory exists
+	if err := os.MkdirAll(filepath.Dir(cacheFile), 0755); err != nil {
+		return err
+	}
+
+	// Marshal to JSON
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// Write to file
+	return os.WriteFile(cacheFile, jsonData, 0644)
 }
 
 // Test the API connection

@@ -15,7 +15,7 @@ func main() {
 	sources := flag.String("sources", "brandmeister,tgif,hearham", "Comma-separated list of sources to warm")
 	flag.Parse()
 
-	fmt.Printf("🔥 Warming API caches (max age: %s)\n", *maxAge)
+	fmt.Printf("🔥 Warming API caches (max age: %s, sources: %s)\n", *maxAge, *sources)
 	start := time.Now()
 
 	// Parse max age

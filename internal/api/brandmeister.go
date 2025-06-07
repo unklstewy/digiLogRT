@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -257,17 +258,72 @@ func (c *BrandmeisterClient) refreshData() error {
 	return fmt.Errorf("all API endpoints failed, last error: %v", lastErr)
 }
 
-// GetAllRepeaters returns all cached repeater data
-func (c *BrandmeisterClient) GetAllRepeaters() (*BrandmeisterResponse, error) {
-	// Make sure we have data
-	if err := c.ensureData(); err != nil {
+// GetAllRepeaters returns all cached repeater data with file caching
+func (c *BrandmeisterClient) GetAllRepeaters() ([]BrandmeisterRepeater, error) {
+	// Try to load from file cache first
+	if data, err := c.loadFromCache(); err == nil {
+		c.allData = data
+		c.cacheValid = true
+		return data, nil
+	}
+
+	// If file cache miss, fetch from API
+	if err := c.refreshData(); err != nil {
 		return nil, err
 	}
 
-	return &BrandmeisterResponse{
-		Count:     len(c.allData),
-		Repeaters: c.allData,
-	}, nil
+	// Save to file cache
+	if err := c.saveToCache(c.allData); err != nil {
+		log.Printf("Warning: Failed to save cache to file: %v", err)
+	}
+
+	return c.allData, nil
+}
+
+// loadFromCache loads data from file cache
+func (c *BrandmeisterClient) loadFromCache() ([]BrandmeisterRepeater, error) {
+	cacheFile := c.getCacheFile()
+
+	// Check if file exists and is fresh enough
+	info, err := os.Stat(cacheFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check cache age
+	age := time.Since(info.ModTime())
+	if age > 24*time.Hour {
+		return nil, fmt.Errorf("cache too old: %v", age)
+	}
+
+	// Read and parse cache file
+	data, err := os.ReadFile(cacheFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var repeaters []BrandmeisterRepeater
+	err = json.Unmarshal(data, &repeaters)
+	return repeaters, err
+}
+
+// saveToCache saves data to file cache
+func (c *BrandmeisterClient) saveToCache(data []BrandmeisterRepeater) error {
+	cacheFile := c.getCacheFile()
+
+	// Ensure cache directory exists
+	if err := os.MkdirAll(filepath.Dir(cacheFile), 0755); err != nil {
+		return err
+	}
+
+	// Marshal to JSON
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// Write to file
+	return os.WriteFile(cacheFile, jsonData, 0644)
 }
 
 // SearchRepeaters searches for repeaters by callsign, city, or state
