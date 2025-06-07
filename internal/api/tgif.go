@@ -111,11 +111,9 @@ func (tg *TGIFTalkgroup) IsActive() bool {
 func NewTGIFClient() *TGIFClient {
 	return &TGIFClient{
 		BaseURL: "https://api.tgif.network/dmr/talkgroups/json",
-		client: &http.Client{
+		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		cacheTime:      6 * time.Hour, // DMR data changes more frequently
-		startupRefresh: 2 * time.Hour, // Refresh if older than 2 hours on startup
 	}
 }
 
