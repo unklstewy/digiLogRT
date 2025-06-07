@@ -1,0 +1,7 @@
+ID,NAME,GENERAL_URL,ABOUT_URL,API_URL,API_KEY_REQ,API_KEY,ABOUT_BLURB,CREDIT,LICENSE,API_DOCS_URL
+1,"hearham.com","https://hearham.com","https://hearham.com/repeaters","https://hearham.com/api/repeaters/v1","FALSE","NULL,","https://hearham.com/terms","NO_DOCS_CREATE_RAW_HANDLER"
+2,"RepeaterBook.com","https://www.repeaterbook.com/","https://www.repeaterbook.com/wiki/doku.php?id=start","https://www.repeaterbook.com/api","TRUE","NULL","RepeaterBook.com is a repeater location and configuration lookup source.","TRUE","https://www.repeaterbook.com/index.php/legal","https://www.repeaterbook.com/wiki/doku.php?id=api"
+3,"aprs.fi","https://aprs.fi","https://aprs.fi/page/faq","https://api.aprs.fi/api/","TRUE","126515.6ryMvtanTmJDG","https://aprs.fi/doc/guide/guide.html","TRUE","https://aprs.fi/page/tos","https://aprs.fi/page/api"
+4,"Brandmeister.network","https://brandmeister.network","https://wiki.brandmeister.network/index.php/Main_Page","https://api.brandmeister.network/v2/","TRUE",,"A Decentralized DMR Digital Voice Hosting Service","TRUE","https://wiki.brandmeister.network/index.php/Policies_and_Rules","https://api.brandmeister.network/docs/"
+5,"TGIF.network","https://tgif.network","https://tgif.network/faq","https://api.tgif.network/dmr/talkgroups/json","FALSE","NULL","Community Hosted DMR TalkGrop Network","TRUE","NULL","NULL"
+
