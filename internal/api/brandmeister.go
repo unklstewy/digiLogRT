@@ -125,137 +125,29 @@ func (c *BrandmeisterClient) Initialize() error {
 }
 
 // refreshData fetches fresh data from the Brandmeister API
-// refreshData fetches fresh data from the Brandmeister API
 func (c *BrandmeisterClient) refreshData() error {
 	fmt.Println("Fetching repeater data from Brandmeister.network...")
 
-	// Based on Brandmeister API docs, let's try these endpoints:
+	// Try different endpoints
 	endpoints := []string{
-		"/v2/device",         // Devices (repeaters/hotspots) endpoint
-		"/v1.0/repeater",     // Alternative repeater endpoint
-		"/v1.0/device",       // Alternative device endpoint
-		"/api/v1.0/repeater", // Full path with api prefix
-		"/api/v1.0/device",   // Full path with api prefix for devices
+		"/v2/device",
+		"/v1/device",
+		"/device",
 	}
 
-	var lastErr error
-
-	// Try each endpoint until one works
 	for _, endpoint := range endpoints {
-		url := fmt.Sprintf("%s%s", c.baseURL, endpoint)
+		url := c.baseURL + endpoint
 		fmt.Printf("Trying endpoint: %s\n", url)
 
-		// Create the HTTP request
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			lastErr = fmt.Errorf("failed to create HTTP request for %s: %v", endpoint, err)
-			continue
-		}
-
-		// Add headers - Brandmeister might need specific headers
-		req.Header.Add("Authorization", "Bearer "+c.apiKey)
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("Content-Type", "application/json")
-
-		// Make the HTTP request
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			lastErr = fmt.Errorf("failed to make HTTP request to %s: %v", endpoint, err)
-			continue
-		}
-
-		fmt.Printf("Response status for %s: %d\n", endpoint, resp.StatusCode)
-
-		// If we get a 404, try the next endpoint
-		if resp.StatusCode == http.StatusNotFound {
-			resp.Body.Close()
-			lastErr = fmt.Errorf("endpoint %s returned 404", endpoint)
-			continue
-		}
-
-		// If we get a 401, it's an authentication issue
-		if resp.StatusCode == http.StatusUnauthorized {
-			resp.Body.Close()
-			lastErr = fmt.Errorf("endpoint %s returned 401 - check API key", endpoint)
-			continue
-		}
-
-		// If we get a different error, show it but keep trying
-		if resp.StatusCode != http.StatusOK {
-			body, _ := io.ReadAll(resp.Body)
-			resp.Body.Close()
-			fmt.Printf("Error response from %s: %s\n", endpoint, string(body))
-			lastErr = fmt.Errorf("endpoint %s returned status %d", endpoint, resp.StatusCode)
-			continue
-		}
-
-		// Success! Read the response
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			lastErr = fmt.Errorf("failed to read response body from %s: %v", endpoint, err)
-			continue
-		}
-
-		// Show first part of response for debugging
-		bodyStr := string(body)
-		fmt.Printf("✓ SUCCESS with endpoint: %s\n", endpoint)
-		if len(bodyStr) > 500 {
-			fmt.Printf("Raw response (first 500 chars): %s\n", bodyStr[:500])
+		if err := c.tryEndpoint(url); err == nil {
+			fmt.Printf("✓ SUCCESS with endpoint: %s\n", endpoint)
+			return nil
 		} else {
-			fmt.Printf("Raw response: %s\n", bodyStr)
+			fmt.Printf("✗ Failed with endpoint %s: %v\n", endpoint, err)
 		}
-
-		// Try to parse the JSON response
-		// First, let's see if it's an array or an object
-		var rawResult interface{}
-		if err := json.Unmarshal(body, &rawResult); err != nil {
-			fmt.Printf("JSON parsing failed: %v\n", err)
-			fmt.Printf("Response was: %s\n", bodyStr[:min(1000, len(bodyStr))])
-			return fmt.Errorf("failed to decode JSON response from %s: %v", endpoint, err)
-		}
-
-		// Now try to parse as our expected structure
-		var repeaters []BrandmeisterRepeater
-		if err := json.Unmarshal(body, &repeaters); err != nil {
-			// Maybe it's wrapped in an object? Let's try a different structure
-			var wrappedResponse struct {
-				Data    []BrandmeisterRepeater `json:"data"`
-				Results []BrandmeisterRepeater `json:"results"`
-				Items   []BrandmeisterRepeater `json:"items"`
-			}
-
-			if err2 := json.Unmarshal(body, &wrappedResponse); err2 != nil {
-				fmt.Printf("Both parsing attempts failed:\n")
-				fmt.Printf("  Direct array parse: %v\n", err)
-				fmt.Printf("  Wrapped object parse: %v\n", err2)
-				fmt.Printf("Raw response structure: %+v\n", rawResult)
-				return fmt.Errorf("failed to decode JSON response from %s", endpoint)
-			}
-
-			// Use whichever array has data
-			if len(wrappedResponse.Data) > 0 {
-				repeaters = wrappedResponse.Data
-			} else if len(wrappedResponse.Results) > 0 {
-				repeaters = wrappedResponse.Results
-			} else if len(wrappedResponse.Items) > 0 {
-				repeaters = wrappedResponse.Items
-			} else {
-				return fmt.Errorf("no repeater data found in response from %s", endpoint)
-			}
-		}
-
-		// Update our cache
-		c.allData = repeaters
-		c.lastUpdate = time.Now()
-		c.cacheValid = true
-
-		fmt.Printf("Successfully loaded %d repeaters from Brandmeister.network using %s\n", len(repeaters), endpoint)
-		return nil
 	}
 
-	// If we get here, none of the endpoints worked
-	return fmt.Errorf("all API endpoints failed, last error: %v", lastErr)
+	return fmt.Errorf("all endpoints failed")
 }
 
 // GetAllRepeaters returns all cached repeater data with file caching
@@ -486,4 +378,48 @@ func (r *BrandmeisterRepeater) GetPowerInfo() string {
 		return fmt.Sprintf("%d ft AGL", r.AGL)
 	}
 	return "Power info not available"
+}
+
+// tryEndpoint attempts to fetch data from a specific endpoint
+func (c *BrandmeisterClient) tryEndpoint(url string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("Response status for %s: %d\n", url, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("status %d: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Raw response (first 500 chars): \n%s\n", string(body[:min(500, len(body))]))
+
+	var repeaters []BrandmeisterRepeater
+	if err := json.Unmarshal(body, &repeaters); err != nil {
+		return fmt.Errorf("JSON decode error: %v", err)
+	}
+
+	c.allData = repeaters
+	c.lastUpdate = time.Now()
+	c.cacheValid = true
+
+	fmt.Printf("Successfully loaded %d repeaters from Brandmeister.network using %s\n", len(repeaters), url)
+	return nil
 }

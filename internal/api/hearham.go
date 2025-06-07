@@ -33,7 +33,17 @@ type HearhamRepeater struct {
 	Restriction  string  `json:"restriction"`
 }
 
-// ...existing code...
+// hearham.com API client with intelligent caching
+type HearhamClient struct {
+	BaseURL         string
+	client          *http.Client
+	allData         []HearhamRepeater
+	lastUpdate      time.Time
+	cacheValid      bool // Add this field
+	cacheTime       time.Duration
+	startupRefresh  time.Duration // How old cache can be before forcing refresh on startup
+	backgroundCheck time.Duration // How often to check for updates in background
+}
 
 // getCacheFile returns the path to the cache file
 func (c *HearhamClient) getCacheFile() string {
@@ -164,17 +174,6 @@ type HearhamResponse struct {
 	Count     int               `json:"count,omitempty"`
 	Message   string            `json:"message,omitempty"`
 	Repeaters []HearhamRepeater `json:"repeaters,omitempty"`
-}
-
-// hearham.com API client with intelligent caching
-type HearhamClient struct {
-	BaseURL         string
-	client          *http.Client
-	allData         []HearhamRepeater
-	lastUpdate      time.Time
-	cacheTime       time.Duration
-	startupRefresh  time.Duration // How old cache can be before forcing refresh on startup
-	backgroundCheck time.Duration // How often to check for updates in background
 }
 
 // Create new hearham client with configurable caching
@@ -383,7 +382,7 @@ func (c *HearhamClient) GetAllRepeaters() ([]HearhamRepeater, error) {
 	}
 
 	// If file cache miss, fetch from API
-	if err := c.refreshData(); err != nil {
+	if err := c.fetchAllData(); err != nil { // Use fetchAllData instead of refreshData
 		return nil, err
 	}
 
