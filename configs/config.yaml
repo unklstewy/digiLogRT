@@ -1,0 +1,31 @@
+app:
+  name: "DigiLogRT"
+  version: "0.1.0"
+
+window:
+  width: 1200
+  height: 800
+
+# ...existing content...
+
+apis:
+  aprs_key: "126515.6ryMvtanTmJDG"
+  repeater_book_key: ""  # Will be filled when you receive the API key
+  brandmeister_key: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiOTZlNTI3NzMzMGU3YWE5NjFkN2YxODFjMGQzYzViMzgwMTUwZjYxMThhZmY5NjM1MTY4OGM1NGRkMzNiZDUzNjhiNjVjZjEyMzAyMzcyZmEiLCJpYXQiOjE3NDkzMTY0NzguOTA4NjIxLCJuYmYiOjE3NDkzMTY0NzguOTA4NjIzLCJleHAiOjQ5MDQ5OTAwNzguOTAzMzgxLCJzdWIiOiIzNjE5NCIsInNjb3BlcyI6W119.ns1ScyV3jobCALguZd7o7zN3puN0L4Q110HRHKad9G5WQ1IfN4vm8KRHN9Q_EXoUQZ4gdnhzXW68HIC278EZGzmn33D8rzRLZdwd81DXKsD44-PD6c7Gew5tposibcn239oqKS29QrW37OIHZvfDMdhku9-NbSnAcx5URG3T4jH7PV7nAZgQsCeG2-TH8Zcx1EYYcqah82M8iQUp9EkYyiUw7sXYaz_9UTiY70MrLnGsZZDM4PDEYJaechLXfoZrTqx9cxv7KdnasiUzFchfCPB-8yUoou0Oad_YaRDnt-5db93UB56J5EutYKQ1V2ERjNTOL7zHA_Vwh4JD7NfglmxddCiAJ2VGrmbU6jN1VqFzth_AgU0hW9rpXCMGcM-NQKzh7WM8SXrafC3czx1JzKg-o5dO6Iy9eqqk5QBqhxqN4QOqbxz3bhwsUDOuylFrNt_irn41UtKxJs1tf52tPfbO3XVhUn5lVaxPxZJmbhNyv025TpyZ4ymfyEvUW8mLZe_zgeHntKaP0ePBT5caH9VSMSzkvk_FLxlQaxlvT4WroxmJtxCKhi_Ehr361Z-GphH3RvBMcBfiXW65-bYnYop4sEMFKMTKTaexcFMjrwGcpGnje_KuoGZHuO5APAinxcNyu4SWg18iqY5Tr53oKJGmZHXXFhvKOx6RRPWalOc"
+
+# ...existing content...
+
+# API caching settings
+caching:
+  hearham:
+    cache_duration: "24h"      # How long cache is valid
+    startup_refresh: "6h"      # Force refresh if older than this on startup
+    background_check: "12h"    # Check for updates every X hours
+  aprs:
+    cache_duration: "1h"       # APRS data changes more frequently
+  repeaterbook:
+    cache_duration: "48h"      # RepeaterBook changes less frequently
+
+# RepeaterBook settings
+repeaterbook:
+  user_agent: "DigiLogRT/0.1.0 Amateur Radio Digital Logging Tool (https://github.com/unklstewy/digiLog, raleigh.dst@gmail.com)"
